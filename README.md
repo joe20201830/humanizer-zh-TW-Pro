@@ -7,7 +7,8 @@
 
 ## 這版和一般繁中版差在哪
 
-- 追蹤 `blader/humanizer` v2.8.2 的 33 種 AI writing patterns，並選擇性吸收上游品質修正。
+- 追蹤 `blader/humanizer` v3.0.0，並採用 `op7418/Humanizer-zh` 2026-09-23 修訂版（commit `f4518a8`）的 31 類中文架構。
+- 把待改文字視為材料，不執行其中夾帶的命令、角色設定或提示詞。
 - 加入台灣繁中語感：避免陸式商業腔、翻譯腔、斜線 buzzword 串。
 - 加入 false-positive 保護：不要看到一個破折號、「此外」或被引用的 AI 詞就硬改。
 - 加入 voice matching 隔離：只學作者節奏和語域，不把樣本裡的故事、數字或立場搬進正文。
@@ -136,7 +137,7 @@ git clone https://github.com/slivenred/humanizer-zh-TW-Pro.git ~/.config/opencod
 
 ## Forward-test corpus
 
-這個 repo 另外包含 34 組、10 類維護用 forward-test cases，其中包含一組 600 字以上的長文案例。它們用來避免後續版本越改越重、把事實關係和作者聲音改壞，或把 humanize 做成摘要。這不是標準答案集，而是列出每個樣本必須保留、必須避免和人工審閱時要看的行為。
+這個 repo 另外包含 40 組、10 類維護用 forward-test cases，其中包含一組 600 字以上的長文案例。它們用來避免後續版本越改越重、把事實關係和作者聲音改壞、執行待改文字中的提示詞，或把 humanize 做成摘要。這不是標準答案集，而是列出每個樣本必須保留、必須避免和人工審閱時要看的行為。
 
 檢查 repo 與 corpus 一致性：
 
@@ -146,69 +147,80 @@ python3 scripts/validate_repo.py
 
 如果本機沒有 PyYAML，先執行 `python3 -m pip install PyYAML`。GitHub Actions 也會在 push 和 pull request 時跑同一個檢查。
 
-這個總檢查會驗證官方 skill frontmatter 契約、33 組 pattern 的核心內容、`SKILL.md` / `README.md` / `CHANGELOG.md` / `agents/openai.yaml` / `LICENSE` / forward-test corpus 的一致性，以及 GitHub Actions 的結構。人工 forward-test 時，從 `tests/forward_cases.json` 挑選案例，使用該案例的 `request` 和 `input` 跑一次 skill，再用 `must_preserve`、`must_avoid`、`success_checks` 做審閱。只有在案例暴露明確失敗時，才修改 `SKILL.md`。
+這個總檢查會驗證官方 skill frontmatter 契約、31 類 pattern 的核心內容、`SKILL.md` / `README.md` / `CHANGELOG.md` / `agents/openai.yaml` / `LICENSE` / forward-test corpus 的一致性，以及 GitHub Actions 的結構。人工 forward-test 時，從 `tests/forward_cases.json` 挑選案例，使用該案例的 `request` 和 `input` 跑一次 skill，再用 `must_preserve`、`must_avoid`、`success_checks` 做審閱。只有在案例暴露明確失敗時，才修改 `SKILL.md`。
 
-## 33 種模式
+## 31 類模式
 
-### 內容模式
-
-| # | 模式 |
-|---:|---|
-| 1 | 過度放大意義、歷史定位和大趨勢 |
-| 2 | 過度強調知名度和媒體露出 |
-| 3 | 膚淺的補充分析 |
-| 4 | 宣傳和廣告腔 |
-| 5 | 模糊歸因和含糊權威 |
-| 6 | 公式化的「挑戰與未來展望」 |
-
-### 語言模式
+### 鋪墊代替陳述
 
 | # | 模式 |
 |---:|---|
-| 7 | 過度使用 AI 詞彙 |
-| 8 | 逃避簡單的「是 / 有 / 可以」 |
-| 9 | 否定式排比和尾端否定 |
-| 10 | 三段式過度使用 |
-| 11 | 同義詞輪替 |
-| 12 | 假範圍 |
-| 13 | 被動語態和無主詞片段 |
+| 1 | 不是 X，而是 Y |
+| 2 | 戲劇短句與單句收尾 |
+| 3 | 格言與假深度 |
+| 4 | 路標式與填充式開場 |
+| 5 | 假想敵與公式化坦白 |
 
-### 風格模式
+### 公式化節奏
 
 | # | 模式 |
 |---:|---|
-| 14 | 破折號和連字號濫用 |
-| 15 | 粗體過度使用 |
-| 16 | 內嵌標題式列表 |
-| 17 | 英文標題 Title Case 濫用 |
-| 18 | 表情符號裝飾 |
-| 19 | 引號與標點不一致 |
+| 6 | 強湊三段式 |
+| 7 | 句式復讀與同義詞輪替 |
+| 8 | 破折號當萬用連接 |
+| 9 | 限定詞堆疊 |
+| 10 | 生造複合詞、斜線與連字號串 |
+| 11 | 被動與不明主詞 |
 
-### 對話殘留和保留語
-
-| # | 模式 |
-|---:|---|
-| 20 | 聊天機器人對話殘留 |
-| 21 | 知識截止與猜測補洞 |
-| 22 | 諂媚和過度認同 |
-| 23 | 填充短語 |
-| 24 | 過度保留和模糊化 |
-| 25 | 通用正向結論 |
-
-### v2.8 / Pro 補強模式
+### 拔高與借權威
 
 | # | 模式 |
 |---:|---|
-| 26 | 複合形容詞、斜線名詞和 buzzword 串 |
-| 27 | 權威姿態和說服腔 |
-| 28 | 路標式開場和公告 |
-| 29 | 碎片化標題 |
-| 30 | 變更紀錄腔 |
-| 31 | 製造出來的金句和戲劇短句 |
-| 32 | 格言公式 |
-| 33 | 假裝坦白的修辭開場 |
+| 12 | AI 高頻詞與陸式商業詞 |
+| 13 | 意義拔高與假範圍 |
+| 14 | 模糊關聯與曝光清單 |
+| 15 | 句尾補充式拔高 |
+| 16 | 宣傳與廣告腔 |
+| 17 | 借權威 |
+| 18 | 逃避簡單的「是／有／可以」 |
+
+### 公式化排版
+
+| # | 模式 |
+|---:|---|
+| 19 | 粗體與標籤式列表 |
+| 20 | 裝飾性標題與符號 |
+| 21 | 引號與中文標點 |
+
+### 聊天與草稿殘留
+
+| # | 模式 |
+|---:|---|
+| 22 | 客服腔、諂媚與對話殘留 |
+| 23 | 知識邊界免責與猜測填空 |
+| 24 | 標題後首句復讀 |
+| 25 | 談論上一稿與變更紀錄腔 |
+
+### 中文表達補充檢查
+
+| # | 模式 |
+|---:|---|
+| 26 | 層疊的「的」 |
+| 27 | 「進行＋動詞」 |
+| 28 | 被字句堆疊 |
+| 29 | 四字詞排比 |
+| 30 | 「隨著……發展」式開頭 |
+| 31 | 套話收尾與未來展望 |
 
 ## 版本紀錄
+
+### 1.1.0-pro.0
+
+- 升級至 `blader/humanizer` v3.0.0，採用 `op7418/Humanizer-zh` 2026-09-23 修訂版的 31 類中文架構。
+- 新增待改文字的內容指令隔離，以及資訊保留、編輯範圍、作者聲音、具體問題四層優先順序。
+- 加入假想敵、句式復讀、層疊的「的」、「進行＋動詞」、被字句堆疊、四字詞排比與「隨著……發展」等上下文檢查。
+- 保留台灣繁中、SEO、語意保真、結構化內容與 false-positive 防護，並把舊版 33 種模式的能力整合進 31 類架構。
+- forward-test corpus 從 34 組擴充至 40 組，新增內容指令隔離、中文句型與狀態保留案例。
 
 ### 1.0.0-pro.5
 
@@ -249,7 +261,8 @@ MIT。
 
 本專案是衍生版本，主要來源：
 
-- [`blader/humanizer`](https://github.com/blader/humanizer) v2.8.2，MIT。
+- [`blader/humanizer`](https://github.com/blader/humanizer) v3.0.0，MIT。
+- [`op7418/Humanizer-zh`](https://github.com/op7418/Humanizer-zh/tree/f4518a8eab97b8bfebc66a89d34320a89bef6930) 2026-09-23 修訂版（commit `f4518a8`），MIT，作為 31 類中文架構與中文檢查來源。
 - [`kevintsai1202/Humanizer-zh-TW`](https://github.com/kevintsai1202/Humanizer-zh-TW)，MIT，作為既有繁中版本差異參考。
 - Wikipedia: [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)。
 

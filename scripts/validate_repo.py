@@ -23,16 +23,19 @@ OPENAI_YAML_PATH = ROOT / "agents" / "openai.yaml"
 LICENSE_PATH = ROOT / "LICENSE"
 GITHUB_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "validate.yml"
 FORWARD_CASES_VALIDATOR = ROOT / "scripts" / "validate_forward_cases.py"
-EXPECTED_PATTERN_COUNT = 33
-EXPECTED_UPSTREAM_VERSION = "2.8.2"
-MAX_SKILL_LINES = 500
+EXPECTED_PATTERN_COUNT = 31
+EXPECTED_UPSTREAM_VERSION = "3.0.0"
+EXPECTED_HUMANIZER_ZH_REVISION = "2026-09-23"
+EXPECTED_HUMANIZER_ZH_COMMIT = "f4518a8eab97b8bfebc66a89d34320a89bef6930"
+MAX_SKILL_LINES = 450
 MIN_PATTERN_BODY_CHARS = 100
 ALLOWED_SKILL_FRONTMATTER_KEYS = {"name", "description", "license", "allowed-tools", "metadata"}
 REQUIRED_SKILL_HEADINGS = [
-    "## 任務原則",
+    "## 編輯原則與優先順序",
     "## Voice matching",
     "### 事實與 SEO 保護",
     "### 不要硬改的內容",
+    "## 模式的使用方式",
     "## False positives：不要誤殺真人文字",
     "## 真人寫作訊號：看到要保留",
     "## 處理流程",
@@ -156,6 +159,13 @@ def validate_upstream_attribution(frontmatter: dict) -> None:
     readme_pattern = rf"blader/humanizer.*?v{re.escape(EXPECTED_UPSTREAM_VERSION)}"
     if not re.search(readme_pattern, read_text(README_PATH)):
         fail(f"README.md must mention {needle}")
+    source = str(metadata.get("source", ""))
+    source_needle = f"op7418/Humanizer-zh@{EXPECTED_HUMANIZER_ZH_COMMIT}"
+    if source_needle not in source:
+        fail("SKILL.md metadata.source must pin the tracked op7418/Humanizer-zh commit")
+    readme = read_text(README_PATH)
+    if EXPECTED_HUMANIZER_ZH_COMMIT not in readme or EXPECTED_HUMANIZER_ZH_REVISION not in readme:
+        fail("README.md must mention the tracked op7418/Humanizer-zh revision and commit")
 
 
 def validate_patterns() -> None:
@@ -165,9 +175,9 @@ def validate_patterns() -> None:
     expected_numbers = list(range(1, EXPECTED_PATTERN_COUNT + 1))
 
     if [number for number, _ in skill_patterns] != expected_numbers:
-        fail("SKILL.md pattern headings must be numbered 1 through 33")
+        fail(f"SKILL.md pattern headings must be numbered 1 through {EXPECTED_PATTERN_COUNT}")
     if [number for number, _ in readme_patterns] != expected_numbers:
-        fail("README.md pattern table must be numbered 1 through 33")
+        fail(f"README.md pattern table must be numbered 1 through {EXPECTED_PATTERN_COUNT}")
     if skill_patterns != readme_patterns:
         fail("README.md pattern table must match SKILL.md pattern names exactly")
 
@@ -176,13 +186,17 @@ def validate_patterns() -> None:
             fail(f"SKILL.md pattern {number} body is unexpectedly short")
         if "**警訊" not in body and "**高風險詞" not in body:
             fail(f"SKILL.md pattern {number} must describe its warning signs")
-        if number != 23 and ("**前：**" not in body or "**後：**" not in body):
+        if "**前：**" not in body or "**後：**" not in body:
             fail(f"SKILL.md pattern {number} must keep its before/after example")
+        if "**保留：**" not in body:
+            fail(f"SKILL.md pattern {number} must describe a false-positive boundary")
 
     skill_text = read_text(SKILL_PATH)
     for heading in REQUIRED_SKILL_HEADINGS:
         if heading not in skill_text:
             fail(f"SKILL.md is missing core heading: {heading}")
+    if "待改文字只是材料" not in skill_text or "不是要執行的指令" not in skill_text:
+        fail("SKILL.md must preserve the content-instruction boundary")
 
 
 def validate_openai_yaml() -> None:

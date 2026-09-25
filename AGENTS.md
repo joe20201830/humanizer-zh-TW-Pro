@@ -15,7 +15,7 @@ This repository is a Markdown skill for Codex, Claude Code, OpenCode, and compat
 
 ## Maintenance contract
 
-- Keep the pattern count at 33 unless deliberately adding, removing, or renumbering patterns.
+- Keep the pattern count at 31 unless deliberately adding, removing, or renumbering patterns.
 - If pattern names, behavior, or numbering change in `SKILL.md`, update the README table in the same change.
 - Keep the version in `SKILL.md` metadata, README version history, and the latest `CHANGELOG.md` release in sync.
 - Preserve the Taiwan Traditional Chinese focus. Do not turn this back into a literal translation of the English source.

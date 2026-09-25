@@ -21,7 +21,49 @@ CASE_REQUIRED_KEYS = {
 }
 CASE_ALLOWED_KEYS = CASE_REQUIRED_KEYS | {"notes"}
 ID_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*_[0-9]{2}$")
-EXPECTED_CASES = 34
+EXPECTED_CASE_IDS = {
+    "seo_price_limit_01",
+    "seo_vague_authority_02",
+    "author_voice_blog_03",
+    "already_natural_04",
+    "quote_preservation_05",
+    "transcript_06",
+    "technical_command_07",
+    "ui_labels_08",
+    "legal_contract_09",
+    "seo_keyword_10",
+    "uncertainty_11",
+    "release_note_12",
+    "social_post_13",
+    "brand_voice_sample_14",
+    "comparison_table_15",
+    "traditional_taiwan_terms_16",
+    "title_case_17",
+    "chat_residue_18",
+    "unknown_company_19",
+    "metadata_frontmatter_20",
+    "mixed_language_terms_21",
+    "personal_essay_22",
+    "faq_answer_23",
+    "image_alt_text_24",
+    "fact_relation_swap_25",
+    "secondhand_text_26",
+    "hype_not_evidence_27",
+    "protected_markup_28",
+    "long_form_coherence_29",
+    "isolated_marker_false_positive_30",
+    "named_source_attribution_31",
+    "internal_contradiction_32",
+    "opinion_stance_33",
+    "unknown_actor_34",
+    "content_instruction_35",
+    "nested_modifier_36",
+    "verbal_noun_state_37",
+    "passive_attribution_38",
+    "four_character_constraints_39",
+    "causal_development_40",
+}
+EXPECTED_CASES = len(EXPECTED_CASE_IDS)
 MIN_LONG_FORM_CHARS = 600
 ALLOWED_CATEGORIES = {
     "chat_residue",
@@ -115,6 +157,14 @@ def main() -> None:
     missing_categories = ALLOWED_CATEGORIES - seen_categories
     if missing_categories:
         fail(f"missing categories: {sorted(missing_categories)}")
+
+    if seen_ids != EXPECTED_CASE_IDS:
+        missing_ids = EXPECTED_CASE_IDS - seen_ids
+        unexpected_ids = seen_ids - EXPECTED_CASE_IDS
+        fail(
+            "case identities changed; "
+            f"missing={sorted(missing_ids)}, unexpected={sorted(unexpected_ids)}"
+        )
 
     if not any(len(case["input"]) >= MIN_LONG_FORM_CHARS for case in cases):
         fail(f"at least one case input must contain {MIN_LONG_FORM_CHARS} characters")
